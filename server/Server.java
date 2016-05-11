@@ -9,82 +9,81 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
-	public static void main(String[] args){
-		
-	}
-
-
-public class Entity {
-	float r = 0.0;
-	float theta = 0.0;
-	float v_r = 0.0;
-	float v_rtheta = 0.0f;
-	public void tick(){
-		this.r = this.r + this.v_r;
-		this.theta = this.theta + this.v_theta;
-	}
-	public  reportPosition(){
-		
-	}
+    public static void main(String[] args){
+    }
 }
 
-public class GravityAffected extends Entity {
+class Entity extends Object{
+    double r = 0.0f;
+    double theta = 0.0f;
+    double v_r = 0.0f;
+    double v_theta = 0.0f;
+    public void tick(){
+        this.r = this.r + this.v_r;
+        this.theta = this.theta + this.v_theta;
+    }
+    public Coords reportPosition(){
+        return new Coords();
+    }
 }
 
-public class Templar extends GravityAffected {
+class GravityAffected extends Entity {
 }
 
-public class Hitbox extends Entity {
+class Templar extends GravityAffected {
 }
 
-public class Projectile extends GravityAffected {
+class Hitbox extends Entity {
 }
 
-public class Missile extends Entity {
+class Projectile extends GravityAffected {
 }
 
-public class StatusFairy {
+class Missile extends Entity {
 }
 
-public class StatusEffect {
+class StatusFairy {
 }
 
-public class Coords {
-	float x
-	float y
-	float r
-	float theta
-	public Coords {
-		this.x = 0;
-		this.y = 0;
-		this.r = 0;
-		this.theta = 0;
-	}
-	public Coords(boolean polar, float val1, float val2){
-		if (polar) {
-			this.r = val1;
-			this.theta = val2;
-			this.x = Math.cos(val2) * val1;
-			this.y = Math.sin(val2) * val1;
-		}
-		else {
-			this.x = val1;
-			this.y = val2;
-			this.r = Math.sqrt(val1*val1+val2*val2);
-			if (val1 != 0){
-				int quad = 0;
-				if (val1 < 0){quad++;}
-				if (val2 < 0){quad++;}
-				this.theta = Math.atan(val2/val1) + Math.pi*quad;
-			}
-			else {
-				if (val2 < 0){
-					this.theta = -Math.pi / 2;
-				}
-				else{
-					this.theta = Math.pi / 2;
-				}
-			}
-		}
-	}
+class StatusEffect {
+}
+
+class Coords {
+    double x;
+    double y;
+    double r;
+    double theta;
+    public Coords(){
+        this.x = 0;
+        this.y = 0;
+        this.r = 0;
+        this.theta = 0;
+    }
+    public Coords(boolean polar, double val1, double val2){
+        if (polar) {
+            this.r = val1;
+            this.theta = val2;
+            this.x = Math.cos(val2) * val1;
+            this.y = Math.sin(val2) * val1;
+        }
+        else {
+            this.x = val1;
+            this.y = val2;
+            this.r = (double) Math.sqrt(val1*val1+val2*val2);
+            if (val1 != 0){
+                int quad = 0;
+                if (val1 < 0){quad++;}
+                if (val2 < 0){quad++;}
+                this.theta = Math.atan(val2/val1) + Math.PI*quad;
+            }
+            else {
+                if (val2 < 0){
+                    this.theta = -Math.PI / 2;
+                }
+                else{
+                    this.theta = Math.PI / 2;
+                }
+            }
+        }
+    }
 }
