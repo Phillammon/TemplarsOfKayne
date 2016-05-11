@@ -14,10 +14,11 @@ public class Server {
 }
 
 class Entity extends Object{
-    double r = 0.0f;
-    double theta = 0.0f;
-    double v_r = 0.0f;
-    double v_theta = 0.0f;
+    double r;
+    double theta;
+    double v_r;
+    double v_theta;
+    double radius;
     public void tick(){
         this.moveTick();
         if (this.theta <= ToKVars.PlanetRadius){
@@ -31,11 +32,18 @@ class Entity extends Object{
     public Coords reportPosition(){
         return new Coords(true, this.r, this.theta);
     }
+    
     private void hitGround(){
+        this.r = ToKVars.PlanetRadius;
     }
 }
 
 class GravityAffected extends Entity {
+    private void moveTick(){   
+        this.v_r = this.v_r - ToKVars.Gravity;
+        this.r = this.r + this.v_r;
+        this.theta = this.theta + this.v_theta;
+    }
 }
 
 class Templar extends GravityAffected {
@@ -57,10 +65,10 @@ class StatusEffect {
 }
 
 class Coords {
-    double x;
-    double y;
-    double r;
-    double theta;
+    public double x;
+    public double y;
+    public double r;
+    public double theta;
     public Coords(){
         this.x = 0;
         this.y = 0;

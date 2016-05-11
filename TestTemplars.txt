@@ -1,0 +1,28 @@
+Tanks
+- Bastion
+- Iofur
+
+Cannons
+- Bianca
+- Cordelia
+
+Novas
+- Mordecai
+- Ingenia
+
+Assassins
+- Tyr
+- Persephone
+
+Beatsticks
+- Carl
+- Oscar
+
+Bruisers
+- Feldin
+- Elijah
+
+Supports
+- Jedediah
+- Squall
+
