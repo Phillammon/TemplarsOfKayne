@@ -19,11 +19,19 @@ class Entity extends Object{
     double v_r = 0.0f;
     double v_theta = 0.0f;
     public void tick(){
+        this.moveTick();
+        if (this.theta <= ToKVars.PlanetRadius){
+            this.hitGround();
+        }
+    }
+    private void moveTick(){   
         this.r = this.r + this.v_r;
         this.theta = this.theta + this.v_theta;
     }
     public Coords reportPosition(){
-        return new Coords();
+        return new Coords(true, this.r, this.theta);
+    }
+    private void hitGround(){
     }
 }
 
