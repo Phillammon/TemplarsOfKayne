@@ -178,5 +178,5 @@ class Coords {
     }
 }
 
-class KeyPresses {ph
+class KeyPresses {
 }
