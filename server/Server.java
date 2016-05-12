@@ -22,19 +22,8 @@ class Entity{
     public double v_r;
     public double v_theta;
     public double bounding_radius;
-    public boolean pendingdestruction;
+    public boolean pending_destruction;
     public static String name = "Unknown Entity";
-    public Entity(){
-        this.team = 0;                
-        this.id = -1;
-        this.parent = this; //REMEMBER YOU HAVE DONE THIS.
-        this.r = ToKVars.PlanetRadius;
-        this.theta = 0;
-        this.v_r = 0;
-        this.v_theta = 0;
-        this.bounding_radius = 0;
-        this.pendingdestruction = false;
-    }
     public Entity(int id, Entity parent){
         this.team = 0;                
         this.id = id;                  
@@ -44,7 +33,18 @@ class Entity{
         this.v_r = 0;
         this.v_theta = 0;
         this.bounding_radius = 0;
-        this.pendingdestruction = false;
+        this.pending_destruction = false;
+    }
+    public Entity(){
+        this.team = 0;                
+        this.id = -1;
+        this.parent = this; //REMEMBER YOU HAVE DONE THIS.
+        this.r = ToKVars.PlanetRadius;
+        this.theta = 0;
+        this.v_r = 0;
+        this.v_theta = 0;
+        this.bounding_radius = 0;
+        this.pending_destruction = false;
     }
     public void tick(){
         this.moveTick();
@@ -68,15 +68,8 @@ class Entity{
 class Projectile extends Entity {
     public static String name = "Unknown Projectile";
     public Projectile(int id, Entity parent){
-        this.team = 0;
-        this.id = id;
-        this.r = ToKVars.PlanetRadius;
-        this.theta = 0;
-        this.v_r = 0;
-        this.v_theta = 0;
-        this.bounding_radius = 0;
-        this.pendingdestruction = false;
-        this.parent = parent;
+        super(id, parent);
+        this.team = parent.team;
     }
     public void moveTick(){   
         this.v_r = this.v_r - ToKVars.Gravity;
@@ -86,25 +79,17 @@ class Projectile extends Entity {
 }
 
 class Templar extends Projectile {
-    private static double movespeed = 0;
+    public static String name = "Unknown Templar";
+    public static double movespeed = 0;
     public static int maxhealth = 1;
     public int health;
     public StatusFairy statusfairy;
     public KeyPresses keypresses;
     public Templar(int id, Entity parent){
-        this.team = 0;
-        this.name = "Unknown Templar";
-        this.id = id;
-        this.r = ToKVars.PlanetRadius;
-        this.theta = 0;
-        this.v_r = 0;
-        this.v_theta = 0;
-        this.bounding_radius = 0;
-        this.pendingdestruction = false;
+        super(id, parent);
         this.health = this.maxhealth;
         this.statusfairy = new StatusFairy();
         this.keypresses = new KeyPresses();
-        this.parent = parent;
     }
     public void tick(){
         this.handleInput();
