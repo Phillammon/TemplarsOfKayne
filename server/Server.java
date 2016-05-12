@@ -14,11 +14,38 @@ public class Server {
 }
 
 class Entity extends Object{
-    double r;
-    double theta;
-    double v_r;
-    double v_theta;
-    double radius;
+    public int id;
+    public Entity parent;
+    public int team;
+    public double r;
+    public double theta;
+    public double v_r;
+    public double v_theta;
+    public double bounding_radius;
+    public boolean pendingdestruction;
+    public static String name = "Unknown Entity";
+    public Entity(){
+        this.team = 0;                
+        this.id = -1;                  
+        this.parent = this; //REMEMBER YOU HAVE DONE THIS.
+        this.r = ToKVars.PlanetRadius;
+        this.theta = 0;
+        this.v_r = 0;
+        this.v_theta = 0;
+        this.boundingradius = 0;
+        this.pendingdestruction = false;
+    }
+    public Entity(int id, Entity parent){
+        this.team = 0;                
+        this.id = id;                  
+        this.parent = parent;
+        this.r = ToKVars.PlanetRadius;
+        this.theta = 0;
+        this.v_r = 0;
+        this.v_theta = 0;
+        this.boundingradius = 0;
+        this.pendingdestruction = false;
+    }
     public void tick(){
         this.moveTick();
         if (this.theta <= ToKVars.PlanetRadius){
@@ -38,7 +65,18 @@ class Entity extends Object{
     }
 }
 
-class GravityAffected extends Entity {
+class Projectile extends Entity {
+    public static String name = "Unknown Projectile";
+    public Projectile(int id){
+        this.team = 0;
+        this.id = id;
+        this.r = ToKVars.PlanetRadius;
+        this.theta = 0;
+        this.v_r = 0;
+        this.v_theta = 0;
+        this.boundingradius = 0;
+        this.pendingdestruction = false;
+    }
     private void moveTick(){   
         this.v_r = this.v_r - ToKVars.Gravity;
         this.r = this.r + this.v_r;
@@ -46,16 +84,22 @@ class GravityAffected extends Entity {
     }
 }
 
-class Templar extends GravityAffected {
-}
-
-class Hitbox extends Entity {
-}
-
-class Projectile extends GravityAffected {
-}
-
-class Missile extends Entity {
+class Templar extends Projectile {
+    private static double movespeed = 0;
+    public static double maxhealth = 1;
+    public int health;
+    public Templar(int id){
+        this.team = 0;
+        this.name = "Unknown Templar"
+        this.id = id;
+        this.r = ToKVars.PlanetRadius;
+        this.theta = 0;
+        this.v_r = 0;
+        this.v_theta = 0;
+        this.boundingradius = 0;
+        this.pendingdestruction = false;
+        this.health = this.maxhealth;
+    }
 }
 
 class StatusFairy {
@@ -102,4 +146,37 @@ class Coords {
             }
         }
     }
+    public Coords pathTo(Coords target, boolean polar){
+        if (polar){
+            double dtheta = target.theta - this.theta;
+            double dr = target.r - this.r;
+            if (dtheta > Math.PI){
+                dtheta = dtheta - 2*Math.PI;
+            }
+            if (dtheta < -Math.PI){
+                dtheta = dtheta + 2*Math.PI;
+            }
+            return new Coords(true, dr, dtheta);
+        }
+        else {
+            double dx = target.x - this.x;
+            double dy = target.y - this.y;
+            return new Coords(false, dx, dy);
+        }
+    }
+    public Coords stepTo(Coords target, boolean polar){ //Generates "one unit" towards the target, for things with set movespeed
+        if (polar){                                     //The maths is wonky for the polar side. Don't stare too hard.
+            Coords direction = this.pathTo(target, true);
+            double magnitude = Math.sqrt((direction.r*direction.r)+(direction.theta*direction.theta/(ArcLengthOne*ArcLengthOne))); //If you squint, this looks legit
+            return new Coords(true, direction.r/magnitude, direction.theta/magnitude);  //The maths might work here. Will be honest, not sure.
+        }
+        else {
+            Coords direction = this.pathTo(target, false);                                      //Maths definitely does work here
+            double magnitude = Math.sqrt((direction.x*direction.x)+(direction.y*direction.y));  //Pythag behaves better with straight lines
+            return new Coords(false, direction.x/magnitude, direction.y/magnitude);
+        }
+    }
+}
+
+class KeyPresses {ph
 }
