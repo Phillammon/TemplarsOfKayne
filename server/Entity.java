@@ -44,7 +44,6 @@ class Entity{
     public Coords reportPosition(){
         return new Coords(true, this.r, this.theta);
     }
-    
     public void hitGround(){
         this.r = ToKVars.PlanetRadius;
     }
@@ -68,12 +67,13 @@ class Templar extends Projectile {
     public static double movespeed = 0;
     public static int maxhealth = 1;
     public int health;
+    public boolean facing;
     public StatusFairy statusfairy;
     public KeyPresses keypresses;
     public Templar(int id, Entity parent){
         super(id, parent);
         this.health = this.maxhealth;
-        this.statusfairy = new StatusFairy();
+        this.statusfairy = new StatusFairy(this);
         this.keypresses = new KeyPresses();
     }
     public void tick(){
@@ -83,11 +83,52 @@ class Templar extends Projectile {
             this.hitGround();
         }
     }
+    public void hitGround(){
+        this.r = ToKVars.PlanetRadius;
+        this.v_theta = 0;
+    }
     public void handleInput(){
+        if (this.statusfairy.canAct()){
+            if (this.statusfairy.canMove()){
+                this.facing = this.reportPosition().pathTo(new Coords(false, this.keypresses.cursorx, this.keypresses.cursory), true).theta > 0;
+                if (this.facing){
+                    if (this.keypresses.movefore && !this.keypresses.moveaft){
+                        this.v_theta = this.movespeed;
+                    }
+                    if (this.keypresses.moveaft && !this.keypresses.movefore){
+                        this.v_theta = -this.movespeed;
+                    }
+                }
+                else {
+                    if (this.keypresses.movefore && !this.keypresses.moveaft){
+                        this.v_theta = -this.movespeed;
+                    }
+                    if (this.keypresses.moveaft && !this.keypresses.movefore){
+                        this.v_theta = this.movespeed;
+                    }
+                }
+            }
+        }
     }
 }
 
 class StatusFairy {
+    private Templar parent;
+    private StatusEffect first;
+    public StatusFairy (Templar parent){
+        this.parent = parent;
+    }
+    public boolean canAct(){
+        return true;
+    }
+    public boolean canMove(){
+        return true;
+    }
+    public boolean canCast(String tags){
+        return true;
+    }
+    public void tickStatuses(){
+    }
 }
 
 class StatusEffect {
