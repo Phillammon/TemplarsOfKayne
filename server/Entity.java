@@ -8,6 +8,7 @@ class Entity{
     public double v_theta;
     public double bounding_radius;
     public boolean pending_destruction;
+    public Server server;
     public static String name = "Unknown Entity";
     public Entity(int id, Entity parent){
         this.team = 0;                
@@ -19,8 +20,9 @@ class Entity{
         this.v_theta = 0;
         this.bounding_radius = 0;
         this.pending_destruction = false;
+        this.server = parent.server;
     }
-    public Entity(){
+    public Entity(Server server){
         this.team = 0;                
         this.id = -1;
         this.parent = this; //REMEMBER YOU HAVE DONE THIS.
@@ -30,6 +32,7 @@ class Entity{
         this.v_theta = 0;
         this.bounding_radius = 0;
         this.pending_destruction = false;
+        this.server = server;
     }
     public void tick(){
         this.moveTick();
@@ -40,6 +43,9 @@ class Entity{
     public void moveTick(){   
         this.r = this.r + this.v_r;
         this.theta = this.theta + this.v_theta;
+    }
+    public void log(String s){   
+        this.server.log(s);
     }
     public Coords reportPosition(){
         return new Coords(true, this.r, this.theta);
