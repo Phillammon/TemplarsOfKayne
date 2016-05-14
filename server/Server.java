@@ -1,9 +1,6 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.DatagramSocket;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 
 public class Server {
     long starttime;
@@ -17,7 +14,7 @@ public class Server {
     public Server(){
         this.bootServer();
     }
-    private void bootServer(){
+    protected void bootServer(){
         this.starttime = System.currentTimeMillis();
         this.populate();
         this.ticknumber = 0;
@@ -28,13 +25,16 @@ public class Server {
                 this.tickServer();
             }
             else {
-                //this.log("Check for packets here");
+                this.processInput();
             }
         }
     }
     private void populate(){
         this.baseentity = new Entity(this);
-        this.addEntity(new Templar(this.baseentity));
+        this.first = new EntityHolder(this.baseentity);
+    }
+    protected void processInput(){
+        
     }
     public void addEntity(Entity e){
         if (this.first == null){
@@ -50,7 +50,7 @@ public class Server {
             this.entitycount++;
         }
     }
-    private void cullEntities(){
+    protected void cullEntities(){
         this.log("Beginning cull.");
         EntityHolder ptr = this.first;
         while (ptr.next != null){
@@ -65,7 +65,7 @@ public class Server {
         }
         this.log("Cull complete.");
     }
-    private void tickServer(){
+    protected void tickServer(){
         this.log("Tick " + this.ticknumber + " begins.");
         this.cullEntities();
         this.log("Tick " + this.ticknumber + " ends.");
@@ -86,4 +86,52 @@ class EntityHolder{
         this.entity = e;
         this.next = null;
     }
+}
+
+class TemplarHolder{
+    public TemplarHolder next;
+    public Templar templar;
+    public InetAddress address;
+    public TemplarHolder(Templar t, InetAddress a){
+        this.templar = t;
+        this.address = a;
+        this.next = null;
+    }
+}
+
+class KeyPressHolder{
+    public KeyPressHolder next;
+    public KeyPresses keypresses;
+    public KeyPressHolder(KeyPresses k){
+        this.keypresses = k;
+        this.next = null;
+    }
+}
+
+class KeypressReciever implements Runnable {
+    public Server server;
+    public KeyPressHolder first;
+    public KeypressReciever(Server s){
+        super();
+        this.server = s;
+    }
+    public void run(){
+        try {
+            DatagramSocket socket = new DatagramSocket(31337);
+            byte[] buffer = new byte[10];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            while (true){
+                socket.receive(packet);
+                this.server.log(packet.toString());
+                
+            }
+        }
+        catch(Exception e){
+            //Shh. Maybe they didn't notice.
+        }
+    }
+    
+}
+
+class BastionFreeForAll extends Server {
 }
