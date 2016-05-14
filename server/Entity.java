@@ -10,9 +10,9 @@ class Entity{
     public boolean pending_destruction;
     public Server server;
     public static String name = "Unknown Entity";
-    public Entity(int id, Entity parent){
+    public Entity(Entity parent){
         this.team = 0;                
-        this.id = id;                  
+        this.id = 0;                  
         this.parent = parent;
         this.r = ToKVars.PlanetRadius;
         this.theta = 0;
@@ -57,8 +57,8 @@ class Entity{
 
 class Projectile extends Entity {
     public static String name = "Unknown Projectile";
-    public Projectile(int id, Entity parent){
-        super(id, parent);
+    public Projectile(Entity parent){
+        super(parent);
         this.team = parent.team;
     }
     public void moveTick(){   
@@ -72,12 +72,13 @@ class Templar extends Projectile {
     public static String name = "Unknown Templar";
     public static double movespeed = 0;
     public static int maxhealth = 1;
+    public static float height = 100.0f;
     public int health;
     public boolean facing;
     public StatusFairy statusfairy;
     public KeyPresses keypresses;
-    public Templar(int id, Entity parent){
-        super(id, parent);
+    public Templar(Entity parent){
+        super(parent);
         this.health = this.maxhealth;
         this.statusfairy = new StatusFairy(this);
         this.keypresses = new KeyPresses();
