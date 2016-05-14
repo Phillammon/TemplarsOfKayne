@@ -25,8 +25,6 @@ public class Server {
         while (true){
             if ((System.currentTimeMillis() - this.starttime)/
             (1000/ToKVars.TicksPerSecond) >= this.ticknumber){
-                this.log(""+skips);
-                skips=0;
                 this.tickServer();
             }
             else {
