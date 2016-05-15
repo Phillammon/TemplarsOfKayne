@@ -11,16 +11,21 @@ public class Server {
     TemplarHolder firstTemplar;
     KeyPressReciever inputsock;
     public static void main(String[] args){
-        Server server = new Server();
+        if (args.length != 1){
+            System.out.println("Please specify a port.");
+        }
+        else {
+            new Thread(new BastionFreeForAll(Integer.parseInt(args[0], 10))).start();
+        }
     }
-    public Server(){
-        this.bootServer();
+    public Server(int port){
+        this.bootServer(port);
     }
-    protected void bootServer(){
+    protected void bootServer(int port){
         this.starttime = System.currentTimeMillis();
         this.log("Beginning server boot process.");
         this.log("Initializing listen socket.");
-        this.inputsock = new KeyPressReciever(this);
+        this.inputsock = new KeyPressReciever(this, port);
         this.log("Starting to listen for clients.");
         new Thread(this.inputsock).start();
         this.log("Listener thread now running.");
@@ -65,16 +70,8 @@ public class Server {
                 }
             }
             if (ptr == null){
-                Templar t = new Templar(this.baseentity);
-                t.keypresses = kp.keypresses;
-                TemplarHolder th = new TemplarHolder(t, kp.address);
-                this.addEntity(t);
-                if (this.firstTemplar == null){
-                    this.firstTemplar = th;
-                }
-                else {
-                    prev.next = th;
-                }
+                /*              If the player isn't recognized, don't take it.
+                */
             }
         }
     }
@@ -91,9 +88,10 @@ public class Server {
             ptr.next.entity.id = this.entitycount;
             this.entitycount++;
         }
+        this.log("Spawned new " + e.name + " (id " + e.id + ")"); 
     }
     protected void cullEntities(){
-        this.log("Beginning cull.");
+        //this.log("Beginning cull.");
         EntityHolder ptr = this.first;
         while (ptr.next != null){
             if (ptr.next.entity.pending_destruction){
@@ -105,12 +103,12 @@ public class Server {
                 ptr = ptr.next;
             }
         }
-        this.log("Cull complete.");
+        //this.log("Cull complete.");
     }
     protected void tickServer(){
-        this.log("Tick " + this.ticknumber + " begins.");
+        //this.log("Tick " + this.ticknumber + " begins.");
         this.cullEntities();
-        this.log("Tick " + this.ticknumber + " ends.");
+        //this.log("Tick " + this.ticknumber + " ends.");
         this.ticknumber++;
     }
     public void log(String s){
@@ -151,24 +149,33 @@ class KeyPressHolder{
         this.next = null;
     }
 }
+class AddressHolder{
+    public AddressHolder next;
+    public InetAddress address;
+    public AddressHolder(InetAddress a){
+        this.address = a;
+        this.next = null;
+    }
+}
 
 class KeyPressReciever implements Runnable {
     public Server server;
     public KeyPressHolder first;
-    public KeyPressReciever(Server s){
+    public int port;
+    public KeyPressReciever(Server s, int port){
         super();
         this.server = s;
         this.first = null;
+        this.port = port;
     }
     public void run(){
         try {
             KeyPressHolder ptr = null;
-            DatagramSocket socket = new DatagramSocket(31337);
-            byte[] buffer = new byte[10];
+            DatagramSocket socket = new DatagramSocket(this.port);
+            byte[] buffer = new byte[2048];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             while (true){
                 socket.receive(packet);
-                this.server.log(packet.toString());
                 if (this.first == null){
                     this.first = new KeyPressHolder(new KeyPresses(false, false, false, false, false, false, 0, 0), packet.getAddress());
                 }
@@ -182,11 +189,99 @@ class KeyPressReciever implements Runnable {
             }
         }
         catch(Exception e){
-            //Shh. Maybe they didn't notice.
+            System.err.println(e);
         }
     }
     
 }
 
-class BastionFreeForAll extends Server {
+class PreConnServer implements Runnable{
+    public Server server;
+    protected DatagramSocket socket;
+    public static String name = "Unknown Server Type";
+    public static String templarsstring = "";
+    public PreConnServer(int port){
+        //Preconn servers take connections, sort out teams/templar picks, then boot up a game server.
+        try {
+            this.socket = new DatagramSocket(port);
+        }
+        catch(Exception e){
+            System.err.println(e);
+        }
+    }
+    public void startGame(int port){
+        this.server = new Server(port);
+    }
+    public void run(){
+        try {
+            byte[] buffer = new byte[2048];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            while (true){
+                this.socket.receive(packet);
+                this.handlePacket(packet, buffer);
+            }
+        }
+        catch(Exception e){
+            System.err.println(e);
+        }
+    }
+    public void handlePacket(DatagramPacket packet, byte[] buffer){
+        String msg = new String(buffer, 0, packet.getLength());
+        packet.setLength(buffer.length);
+        if (msg.equals("query")){
+            this.returnMessage(this.name + this.templarsstring, packet.getAddress());
+        }
+        if (msg.equals("pick")){
+            this.templarPicked(packet, msg);
+        }
+    }
+    public void templarPicked(DatagramPacket packet, String msg){
+    }
+    public void returnMessage(String msg, InetAddress a){
+        try {
+            byte[] message = msg.getBytes();
+            DatagramPacket packet = new DatagramPacket(message, message.length, a, ToKVars.ClientPort);
+            DatagramSocket socket = new DatagramSocket();
+            socket.send(packet);
+            socket.close();
+        }
+        catch(Exception e){
+            System.err.println(e);
+        }
+    }
+    public void addTemplar(InetAddress a, String msg){
+        TemplarHolder th = new TemplarHolder(null, a);
+        if (this.server.firstTemplar == null){
+            this.server.firstTemplar = th;
+        }
+        else {
+            th.next = this.server.firstTemplar;
+            this.server.firstTemplar = th;
+        }
+        this.editTemplar(th, msg);
+    }
+    public void editTemplar(TemplarHolder th, String message){
+        th.templar = new Templar(this.server.baseentity);
+        this.server.addEntity(th.templar);
+    }
+}
+
+class BastionFreeForAll extends PreConnServer {
+    public static String name = "All Bastion Free For All";
+    public int BastionCount;
+    public BastionFreeForAll(int port){
+        super(port);
+        this.BastionCount = 0;
+        this.startGame(port+1);
+    }
+    public void templarPicked(DatagramPacket packet, String msg){
+        addTemplar(packet.getAddress(), msg);
+        this.returnMessage("go", packet.getAddress());
+    }
+    public void editTemplar(TemplarHolder th){
+        th.templar = new Bastion(this.server.baseentity);
+        th.templar.team = this.BastionCount;
+        this.BastionCount++;
+        this.server.addEntity(th.templar);
+    }
 }
