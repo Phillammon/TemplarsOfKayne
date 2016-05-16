@@ -6,6 +6,7 @@ public class Server {
     long starttime;
     int ticknumber;
     int entitycount;
+    int port;
     Entity baseentity;
     EntityHolder first;
     TemplarHolder firstTemplar;
@@ -19,6 +20,7 @@ public class Server {
         }
     }
     public Server(int port){
+        this.port = port;
         this.bootServer(port);
     }
     protected void bootServer(int port){
@@ -107,9 +109,19 @@ public class Server {
     }
     protected void tickServer(){
         //this.log("Tick " + this.ticknumber + " begins.");
+        this.tickEntities();
         this.cullEntities();
         //this.log("Tick " + this.ticknumber + " ends.");
         this.ticknumber++;
+    }
+    protected void tickEntities(){
+        EntityHolder ptr = this.first;
+        while (ptr != null){
+            if (ptr.entity != null){
+                ptr.entity.tick()
+            }
+            ptr = ptr.next;
+        }
     }
     public void log(String s){
         float time = ((float) (System.currentTimeMillis()-this.starttime))/1000;
@@ -276,7 +288,7 @@ class BastionFreeForAll extends PreConnServer {
     }
     public void templarPicked(DatagramPacket packet, String msg){
         addTemplar(packet.getAddress(), msg);
-        this.returnMessage("go", packet.getAddress());
+        this.returnMessage("go" + this.server.port, packet.getAddress());
     }
     public void editTemplar(TemplarHolder th){
         th.templar = new Bastion(this.server.baseentity);
