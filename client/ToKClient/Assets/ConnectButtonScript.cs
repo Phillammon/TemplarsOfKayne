@@ -18,7 +18,7 @@ public class ConnectButtonScript : MonoBehaviour {
         public void onClick(){
             UdpClient sendSocket = new UdpClient();
             UdpClient recSocket = new UdpClient(listenport);
-            recSocket.Client.ReceiveTimeout = 5000;
+            recSocket.Client.ReceiveTimeout = 100;
             IPEndPoint endpoint = new IPEndPoint(IPAddress.Any, listenport);
             sendSocket.Connect(PlayerPrefs.GetString("server"), 31337);
             byte[] message = Encoding.UTF8.GetBytes("query");

@@ -14,6 +14,7 @@ public class GameConnection : MonoBehaviour {
             this.sendSocket = new UdpClient();
             this.recSocket = new UdpClient(listenport);
             this.sendSocket.Connect(PlayerPrefs.GetString("server"), 31338);
+            this.recSocket.Client.ReceiveTimeout = 100;
 	}
 	
 	// Update is called once per frame
@@ -38,5 +39,42 @@ public class GameConnection : MonoBehaviour {
             buttonstring = buttonstring + x + "|" + y;
             byte[] message = Encoding.UTF8.GetBytes(buttonstring);
             this.sendSocket.Send(message, message.Length);
+            byte[] response;
+            try{
+                IPEndPoint endpoint = new IPEndPoint(IPAddress.Any, listenport);
+                response = this.recSocket.Receive(ref endpoint);
+                string responsestring = System.Text.Encoding.UTF8.GetString(response);
+                Debug.Log(responsestring);
+                char[] pipe = {'|'};
+                char[] slash = {'/'};
+                string[] coords = responsestring.Split(pipe);
+                GameObject[] prevplayer = GameObject.FindGameObjectsWithTag("placeholder");
+                for(var i = 0 ; i < prevplayer.Length ; i ++)
+                {
+                    Destroy(prevplayer[i]);
+                }
+                string[] xyplayer = coords[0].Split(slash);
+                float xp = (float) int.Parse(xyplayer[0]);
+                float yp = (float) int.Parse(xyplayer[1]);
+                xp = xp/100;
+                yp = yp/100;
+                GameObject player = GameObject.Find("Player");
+                player.transform.position = new Vector3(xp, yp, 0);
+                GameObject newplayer;
+                for(var i = 1; i < coords.Length ; i++)
+                {
+                    string[] xy1 = coords[i].Split(slash);
+                    float x1 = (float) int.Parse(xy1[0]);
+                    float y1 = (float) int.Parse(xy1[1]);
+                    x1 = x1/100;
+                    y1 = y1/100;
+                    newplayer = GameObject.Instantiate(Resources.Load("Placeholder")) as GameObject;
+                    newplayer.transform.position = new Vector3(x, y, -1);
+                }
+            }
+            catch (SocketException e){
+                Debug.Log(e.ToString());
+            }
+            
         }
 }

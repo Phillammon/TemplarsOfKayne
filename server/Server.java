@@ -129,16 +129,17 @@ public class Server implements Runnable{
         while (e_ptr != null){
             if (e_ptr.entity != null){
                 Coords coords = e_ptr.entity.reportPosition();
-                globalstring = globalstring + coords.x + "/" + coords.y + "|" ;
+                globalstring = globalstring + ((int) coords.x) + "/" + ((int) coords.y) + "|" ;
             }
             e_ptr = e_ptr.next;
         }
+        this.log(globalstring);
         TemplarHolder t_ptr = this.firstTemplar;
         while (t_ptr != null){
             if (t_ptr.templar != null){
                 try {
                     Coords coords = t_ptr.templar.reportPosition();
-                    byte[] message = (coords.x + "/" + coords.y + "|" + globalstring).getBytes();
+                    byte[] message = (((int) coords.x) + "/" + ((int) coords.y) + "|" + globalstring).getBytes();
                     DatagramPacket packet = new DatagramPacket(message, message.length, t_ptr.address, ToKVars.ClientPort);
                     DatagramSocket socket = new DatagramSocket();
                     socket.send(packet);
