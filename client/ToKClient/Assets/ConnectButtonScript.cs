@@ -2,9 +2,10 @@
 using System.Collections;
 using System.Net; 
 using System.Net.Sockets; 
+using System.Text;
 
 public class ConnectButtonScript : MonoBehaviour {
-
+        public static int listenport = 50050;
 	// Use this for initialization
 	void Start () {
 	
@@ -15,6 +16,28 @@ public class ConnectButtonScript : MonoBehaviour {
 	
 	}
         public void onClick(){
-            
+            UdpClient sendSocket = new UdpClient();
+            UdpClient recSocket = new UdpClient(listenport);
+            recSocket.Client.ReceiveTimeout = 5000;
+            IPEndPoint endpoint = new IPEndPoint(IPAddress.Any, listenport);
+            sendSocket.Connect(PlayerPrefs.GetString("server"), 31337);
+            byte[] message = Encoding.ASCII.GetBytes("query");
+            byte[] response;
+            sendSocket.Send(message, message.Length);
+            try{
+                response = recSocket.Receive(ref endpoint);
+                string responsestring = System.Text.Encoding.UTF8.GetString(response);
+                Debug.Log(responsestring);
+                if (responsestring == "Unknown Server Type"){
+                    message = Encoding.ASCII.GetBytes("pick");
+                    sendSocket.Send(message, message.Length);
+                    Application.LoadLevel("PlayScene");
+                }
+            }
+            catch (SocketException e){
+                Debug.Log(e.ToString());
+            }
+            sendSocket.Close();
+            recSocket.Close();
         }
 }

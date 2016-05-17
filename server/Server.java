@@ -2,7 +2,7 @@ import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 
-public class Server {
+public class Server implements Runnable{
     long starttime;
     int ticknumber;
     int entitycount;
@@ -38,9 +38,8 @@ public class Server {
         System.out.println("-----------------------------------------");
         this.starttime = System.currentTimeMillis();
         this.tickServer();
-        this.mainLoop();
     }
-    protected void mainLoop(){
+    public void run(){
         while (true){
             if ((System.currentTimeMillis() - this.starttime)/
             (1000/ToKVars.TicksPerSecond) >= this.ticknumber){
@@ -118,7 +117,7 @@ public class Server {
         EntityHolder ptr = this.first;
         while (ptr != null){
             if (ptr.entity != null){
-                ptr.entity.tick()
+                ptr.entity.tick();
             }
             ptr = ptr.next;
         }
@@ -210,7 +209,7 @@ class KeyPressReciever implements Runnable {
 class PreConnServer implements Runnable{
     public Server server;
     protected DatagramSocket socket;
-    public static String name = "Unknown Server Type";
+    public String name = "Unknown Server Type";
     public static String templarsstring = "";
     public PreConnServer(int port){
         //Preconn servers take connections, sort out teams/templar picks, then boot up a game server.
@@ -223,6 +222,7 @@ class PreConnServer implements Runnable{
     }
     public void startGame(int port){
         this.server = new Server(port);
+        new Thread(this.server).start();
     }
     public void run(){
         try {
@@ -230,6 +230,7 @@ class PreConnServer implements Runnable{
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             while (true){
                 this.socket.receive(packet);
+                this.server.log("Recieved packet from " + packet.getAddress());
                 this.handlePacket(packet, buffer);
             }
         }
@@ -241,9 +242,11 @@ class PreConnServer implements Runnable{
         String msg = new String(buffer, 0, packet.getLength());
         packet.setLength(buffer.length);
         if (msg.equals("query")){
+            this.server.log("Recieved query from " + packet.getAddress());
             this.returnMessage(this.name + this.templarsstring, packet.getAddress());
         }
         if (msg.equals("pick")){
+            this.server.log("Recieved pick from " + packet.getAddress());
             this.templarPicked(packet, msg);
         }
     }
@@ -279,7 +282,7 @@ class PreConnServer implements Runnable{
 }
 
 class BastionFreeForAll extends PreConnServer {
-    public static String name = "All Bastion Free For All";
+    public String name = "All Bastion Free For All";
     public int BastionCount;
     public BastionFreeForAll(int port){
         super(port);
