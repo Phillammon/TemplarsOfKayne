@@ -110,6 +110,7 @@ public class Server implements Runnable{
         //this.log("Tick " + this.ticknumber + " begins.");
         this.tickEntities();
         this.cullEntities();
+        this.sendData();
         //this.log("Tick " + this.ticknumber + " ends.");
         this.ticknumber++;
     }
@@ -120,6 +121,34 @@ public class Server implements Runnable{
                 ptr.entity.tick();
             }
             ptr = ptr.next;
+        }
+    }
+    protected void sendData(){
+        String globalstring = "";
+        EntityHolder e_ptr = this.first;
+        while (e_ptr != null){
+            if (e_ptr.entity != null){
+                Coords coords = e_ptr.entity.reportPosition();
+                globalstring = globalstring + coords.x + "/" + coords.y + "|" ;
+            }
+            e_ptr = e_ptr.next;
+        }
+        TemplarHolder t_ptr = this.firstTemplar;
+        while (t_ptr != null){
+            if (t_ptr.templar != null){
+                try {
+                    Coords coords = t_ptr.templar.reportPosition();
+                    byte[] message = (coords.x + "/" + coords.y + "|" + globalstring).getBytes();
+                    DatagramPacket packet = new DatagramPacket(message, message.length, t_ptr.address, ToKVars.ClientPort);
+                    DatagramSocket socket = new DatagramSocket();
+                    socket.send(packet);
+                    socket.close();
+                }
+                catch(Exception e){
+                    System.err.println(e);
+                }
+            }
+            t_ptr = t_ptr.next;
         }
     }
     public void log(String s){
@@ -188,14 +217,20 @@ class KeyPressReciever implements Runnable {
             while (true){
                 socket.receive(packet);
                 if (this.first == null){
-                    this.first = new KeyPressHolder(new KeyPresses(false, false, false, false, false, false, 0, 0), packet.getAddress());
+                    String msg = new String(buffer, 0, packet.getLength());
+                    String[] values = msg.split("\\|");
+                    this.first = new KeyPressHolder(new KeyPresses((values[0] == "t"), (values[1] == "t"), (values[2] == "t"), (values[3] == "t"), (values[4] == "t"), 
+                    (values[5] == "t"), Integer.parseInt(values[6]), Integer.parseInt(values[7])), packet.getAddress());
                 }
                 else {
                     ptr = this.first;
                     while (ptr.next != null){
                         ptr = ptr.next;
                     }
-                    ptr.next = new KeyPressHolder(new KeyPresses(false, false, false, false, false, false, 0, 0), packet.getAddress());
+                    String msg = new String(buffer, 0, packet.getLength());
+                    String[] values = msg.split("\\|");
+                    this.first = new KeyPressHolder(new KeyPresses((values[0] == "t"), (values[1] == "t"), (values[2] == "t"), (values[3] == "t"), (values[4] == "t"), 
+                    (values[5] == "t"), Integer.parseInt(values[6]), Integer.parseInt(values[7])), packet.getAddress());
                 }
             }
         }
@@ -230,7 +265,6 @@ class PreConnServer implements Runnable{
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             while (true){
                 this.socket.receive(packet);
-                this.server.log("Recieved packet from " + packet.getAddress());
                 this.handlePacket(packet, buffer);
             }
         }
@@ -242,11 +276,9 @@ class PreConnServer implements Runnable{
         String msg = new String(buffer, 0, packet.getLength());
         packet.setLength(buffer.length);
         if (msg.equals("query")){
-            this.server.log("Recieved query from " + packet.getAddress());
             this.returnMessage(this.name + this.templarsstring, packet.getAddress());
         }
         if (msg.equals("pick")){
-            this.server.log("Recieved pick from " + packet.getAddress());
             this.templarPicked(packet, msg);
         }
     }

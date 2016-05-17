@@ -21,7 +21,7 @@ public class ConnectButtonScript : MonoBehaviour {
             recSocket.Client.ReceiveTimeout = 5000;
             IPEndPoint endpoint = new IPEndPoint(IPAddress.Any, listenport);
             sendSocket.Connect(PlayerPrefs.GetString("server"), 31337);
-            byte[] message = Encoding.ASCII.GetBytes("query");
+            byte[] message = Encoding.UTF8.GetBytes("query");
             byte[] response;
             sendSocket.Send(message, message.Length);
             try{
@@ -29,7 +29,7 @@ public class ConnectButtonScript : MonoBehaviour {
                 string responsestring = System.Text.Encoding.UTF8.GetString(response);
                 Debug.Log(responsestring);
                 if (responsestring == "Unknown Server Type"){
-                    message = Encoding.ASCII.GetBytes("pick");
+                    message = Encoding.UTF8.GetBytes("pick");
                     sendSocket.Send(message, message.Length);
                     Application.LoadLevel("PlayScene");
                 }
